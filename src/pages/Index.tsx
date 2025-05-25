@@ -49,9 +49,14 @@ const Index = () => {
   );
 
   const handlePlayRadio = (radio: any) => {
+    console.log('Tentando reproduzir rádio:', radio);
+    
     if (radio.recording_url) {
+      console.log('URL do áudio:', radio.recording_url);
+      
       // Se já está a tocar este rádio, pausar
       if (currentlyPlaying === radio.id && audioElement) {
+        console.log('Pausando áudio atual');
         audioElement.pause();
         setCurrentlyPlaying(null);
         return;
@@ -59,41 +64,77 @@ const Index = () => {
 
       // Se há outro áudio a tocar, pausar primeiro
       if (audioElement) {
+        console.log('Pausando outro áudio');
         audioElement.pause();
       }
 
       // Criar novo elemento de áudio
-      const audio = new Audio(radio.recording_url);
-      audio.crossOrigin = "anonymous";
+      const audio = new Audio();
       
-      // Event listeners
+      // Event listeners ANTES de definir o src
       audio.onloadstart = () => {
-        console.log('Carregando áudio...');
+        console.log('Iniciando carregamento do áudio...');
+      };
+      
+      audio.onloadeddata = () => {
+        console.log('Dados do áudio carregados');
       };
       
       audio.oncanplay = () => {
-        console.log('Áudio pronto para tocar');
-        audio.play().catch(error => {
-          console.error('Erro ao reproduzir áudio:', error);
+        console.log('Áudio pronto para tocar, iniciando reprodução...');
+        audio.play().then(() => {
+          console.log('Reprodução iniciada com sucesso');
+          setCurrentlyPlaying(radio.id);
+        }).catch(error => {
+          console.error('Erro ao iniciar reprodução:', error);
           setCurrentlyPlaying(null);
+          setAudioElement(null);
         });
       };
       
       audio.onplay = () => {
+        console.log('Áudio começou a tocar');
         setCurrentlyPlaying(radio.id);
       };
       
+      audio.onpause = () => {
+        console.log('Áudio pausado');
+        setCurrentlyPlaying(null);
+      };
+      
       audio.onended = () => {
+        console.log('Áudio terminou');
         setCurrentlyPlaying(null);
         setAudioElement(null);
       };
       
       audio.onerror = (error) => {
-        console.error('Erro ao carregar áudio:', error);
+        console.error('Erro no elemento de áudio:', error);
+        console.error('Detalhes do erro:', audio.error);
         setCurrentlyPlaying(null);
         setAudioElement(null);
+        
+        // Tentar abrir em nova aba como fallback
+        console.log('Tentando abrir em nova aba como fallback');
+        window.open(radio.recording_url, '_blank');
       };
 
+      audio.onabort = () => {
+        console.log('Carregamento do áudio foi abortado');
+      };
+
+      audio.onsuspend = () => {
+        console.log('Carregamento do áudio foi suspenso');
+      };
+
+      // Configurar áudio
+      audio.crossOrigin = "anonymous";
+      audio.preload = "auto";
+      
+      // Definir o src e carregar
+      audio.src = radio.recording_url;
+      audio.load();
+      
       setAudioElement(audio);
     } else {
       console.log('URL de gravação não disponível para este rádio');
