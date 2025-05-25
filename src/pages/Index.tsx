@@ -6,14 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useOpenF1Radios, useOpenF1Stats } from "@/hooks/useOpenF1Data";
+import RadioFilters from "@/components/RadioFilters";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMeeting, setSelectedMeeting] = useState<number | undefined>();
+  const [selectedDriver, setSelectedDriver] = useState<number | undefined>();
   
-  // Buscar dados reais da API OpenF1
+  // Buscar dados reais da API OpenF1 para 2025
   const { data: featuredRadios = [], isLoading, error } = useOpenF1Radios({
-    year: 2024,
-    limit: 8
+    year: 2025,
+    meeting_key: selectedMeeting,
+    driver_number: selectedDriver,
+    limit: selectedMeeting || selectedDriver ? undefined : 12
   });
   
   const stats = useOpenF1Stats();
@@ -23,14 +28,14 @@ const Index = () => {
       id: 1,
       title: "Os 10 Rádios Mais Icônicos da História da F1",
       excerpt: "Uma análise profunda dos momentos que marcaram a Fórmula 1 através dos team radios mais memoráveis.",
-      date: "15 de dezembro, 2024",
+      date: "15 de janeiro, 2025",
       author: "João Silva"
     },
     {
       id: 2,
       title: "A Evolução da Comunicação na F1",
       excerpt: "Como os team radios transformaram a estratégia e a narrativa das corridas ao longo das décadas.",
-      date: "12 de dezembro, 2024",
+      date: "12 de janeiro, 2025",
       author: "Maria Santos"
     }
   ];
@@ -49,6 +54,11 @@ const Index = () => {
     } else {
       console.log('URL de gravação não disponível para este rádio');
     }
+  };
+
+  const handleClearFilters = () => {
+    setSelectedMeeting(undefined);
+    setSelectedDriver(undefined);
   };
 
   return (
@@ -85,10 +95,10 @@ const Index = () => {
       <section className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h2 className="text-5xl font-bold text-white mb-4">
-            Reviva os Momentos <span className="text-red-500">Épicos</span>
+            Reviva os Momentos <span className="text-red-500">Épicos</span> de 2025
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Descubra e explore os team radios mais marcantes da Fórmula 1, com dados oficiais da API OpenF1
+            Descubra e explore os team radios mais marcantes da temporada 2025 da Fórmula 1
           </p>
           
           {/* Search Bar */}
@@ -140,11 +150,20 @@ const Index = () => {
       {/* Featured Radios */}
       <section className="container mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
-          <h3 className="text-3xl font-bold text-white">Rádios em Destaque</h3>
+          <h3 className="text-3xl font-bold text-white">Rádios de 2025</h3>
           <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
             Ver Todos
           </Button>
         </div>
+
+        {/* Filtros */}
+        <RadioFilters
+          selectedMeeting={selectedMeeting}
+          selectedDriver={selectedDriver}
+          onMeetingChange={setSelectedMeeting}
+          onDriverChange={setSelectedDriver}
+          onClearFilters={handleClearFilters}
+        />
 
         {isLoading && (
           <div className="text-center py-12">
@@ -209,7 +228,7 @@ const Index = () => {
         {filteredRadios.length === 0 && !isLoading && !error && (
           <div className="text-center py-12">
             <div className="text-gray-400 text-lg">Nenhum rádio encontrado</div>
-            <div className="text-gray-500 text-sm mt-2">Tente ajustar os termos de pesquisa</div>
+            <div className="text-gray-500 text-sm mt-2">Tente ajustar os filtros ou termos de pesquisa</div>
           </div>
         )}
       </section>
@@ -254,7 +273,7 @@ const Index = () => {
               </div>
             </div>
             <p className="text-gray-400 text-sm">
-              © 2024 F1 Rádio PT. Todos os direitos reservados.
+              © 2025 F1 Rádio PT. Todos os direitos reservados.
             </p>
           </div>
         </div>

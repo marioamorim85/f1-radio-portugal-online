@@ -91,14 +91,15 @@ export const openF1Api = {
   async getRadiosWithDetails(params?: {
     year?: number;
     meeting_key?: number;
+    driver_number?: number;
     limit?: number;
   }): Promise<any[]> {
     try {
-      console.log('Buscando team radios da API OpenF1...');
+      console.log('Buscando team radios da API OpenF1 para 2025...');
       
       // Primeiro, buscar as reuniões do ano atual ou especificado
       const meetings = await this.getMeetings({ 
-        year: params?.year || 2024 
+        year: params?.year || 2025 
       });
       
       if (meetings.length === 0) return [];
@@ -113,9 +114,12 @@ export const openF1Api = {
       for (const meeting of targetMeetings) {
         try {
           // Buscar radios para esta reunião
-          const radios = await this.getTeamRadios({ 
-            meeting_key: meeting.meeting_key 
-          });
+          const radioParams: any = { meeting_key: meeting.meeting_key };
+          if (params?.driver_number) {
+            radioParams.driver_number = params.driver_number;
+          }
+          
+          const radios = await this.getTeamRadios(radioParams);
           
           // Buscar pilotos para esta reunião
           const drivers = await this.getDrivers({ 
