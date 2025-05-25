@@ -5,52 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useOpenF1Radios, useOpenF1Stats } from "@/hooks/useOpenF1Data";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
-
-  const featuredRadios = [
-    {
-      id: 1,
-      title: "Multi 21, Seb! Multi 21!",
-      pilot: "Sebastian Vettel",
-      team: "Red Bull Racing",
-      gp: "GP da Malásia 2013",
-      duration: "0:15",
-      legendary: true,
-      description: "O momento icônico onde Vettel desobedeceu ordens da equipe"
-    },
-    {
-      id: 2,
-      title: "Simply Simply Lovely",
-      pilot: "Kimi Räikkönen",
-      team: "Lotus",
-      gp: "GP de Abu Dhabi 2012",
-      duration: "0:08",
-      legendary: true,
-      description: "A reação clássica do Iceman após a vitória"
-    },
-    {
-      id: 3,
-      title: "Get in there Lewis!",
-      pilot: "Lewis Hamilton",
-      team: "Mercedes",
-      gp: "GP da Grã-Bretanha 2020",
-      duration: "0:12",
-      legendary: false,
-      description: "Celebração épica da vitória em casa"
-    },
-    {
-      id: 4,
-      title: "Bono, my tyres are gone",
-      pilot: "Lewis Hamilton",
-      team: "Mercedes",
-      gp: "GP de Portugal 2020",
-      duration: "0:10",
-      legendary: false,
-      description: "O rádio mais memeado da F1 moderna"
-    }
-  ];
+  
+  // Buscar dados reais da API OpenF1
+  const { data: featuredRadios = [], isLoading, error } = useOpenF1Radios({
+    year: 2024,
+    limit: 8
+  });
+  
+  const stats = useOpenF1Stats();
 
   const recentBlogPosts = [
     {
@@ -70,11 +36,20 @@ const Index = () => {
   ];
 
   const filteredRadios = featuredRadios.filter(radio =>
-    radio.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    radio.pilot.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    radio.team.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    radio.gp.toLowerCase().includes(searchTerm.toLowerCase())
+    radio.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    radio.pilot?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    radio.team?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    radio.gp?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handlePlayRadio = (radio: any) => {
+    if (radio.recording_url) {
+      // Abrir URL do áudio em nova aba
+      window.open(radio.recording_url, '_blank');
+    } else {
+      console.log('URL de gravação não disponível para este rádio');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900">
@@ -113,7 +88,7 @@ const Index = () => {
             Reviva os Momentos <span className="text-red-500">Épicos</span>
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Descubra e explore os team radios mais marcantes da Fórmula 1, com transcrições e traduções completas em português
+            Descubra e explore os team radios mais marcantes da Fórmula 1, com dados oficiais da API OpenF1
           </p>
           
           {/* Search Bar */}
@@ -134,28 +109,28 @@ const Index = () => {
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardContent className="p-6 text-center">
               <Mic className="h-8 w-8 text-red-500 mx-auto mb-2" />
-              <h3 className="text-2xl font-bold text-white">1,247</h3>
+              <h3 className="text-2xl font-bold text-white">{stats.totalRadios}</h3>
               <p className="text-gray-300">Rádios Arquivados</p>
             </CardContent>
           </Card>
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardContent className="p-6 text-center">
               <Users className="h-8 w-8 text-red-500 mx-auto mb-2" />
-              <h3 className="text-2xl font-bold text-white">23</h3>
+              <h3 className="text-2xl font-bold text-white">{stats.totalDrivers}</h3>
               <p className="text-gray-300">Pilotos</p>
             </CardContent>
           </Card>
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardContent className="p-6 text-center">
               <Trophy className="h-8 w-8 text-red-500 mx-auto mb-2" />
-              <h3 className="text-2xl font-bold text-white">74</h3>
+              <h3 className="text-2xl font-bold text-white">{stats.totalMeetings}</h3>
               <p className="text-gray-300">Grandes Prémios</p>
             </CardContent>
           </Card>
           <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
             <CardContent className="p-6 text-center">
               <Calendar className="h-8 w-8 text-red-500 mx-auto mb-2" />
-              <h3 className="text-2xl font-bold text-white">2024</h3>
+              <h3 className="text-2xl font-bold text-white">{stats.currentYear}</h3>
               <p className="text-gray-300">Temporada Atual</p>
             </CardContent>
           </Card>
@@ -170,6 +145,19 @@ const Index = () => {
             Ver Todos
           </Button>
         </div>
+
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="text-white text-lg">Carregando rádios da API OpenF1...</div>
+          </div>
+        )}
+
+        {error && (
+          <div className="text-center py-12">
+            <div className="text-red-400 text-lg">Erro ao carregar dados da API OpenF1</div>
+            <div className="text-gray-400 text-sm mt-2">Verifique sua conexão com a internet</div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredRadios.map((radio) => (
@@ -193,7 +181,11 @@ const Index = () => {
                       {radio.pilot} • {radio.team}
                     </CardDescription>
                   </div>
-                  <Button size="sm" className="bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    size="sm" 
+                    className="bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handlePlayRadio(radio)}
+                  >
                     <Play className="h-4 w-4" />
                   </Button>
                 </div>
@@ -202,11 +194,24 @@ const Index = () => {
                 <p className="text-gray-400 text-sm mb-3">{radio.description}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-red-400 font-medium">{radio.gp}</span>
+                  {radio.team_colour && (
+                    <div 
+                      className="w-4 h-4 rounded-full border border-white/20"
+                      style={{ backgroundColor: `#${radio.team_colour}` }}
+                    />
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+
+        {filteredRadios.length === 0 && !isLoading && !error && (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-lg">Nenhum rádio encontrado</div>
+            <div className="text-gray-500 text-sm mt-2">Tente ajustar os termos de pesquisa</div>
+          </div>
+        )}
       </section>
 
       {/* Blog Section */}
