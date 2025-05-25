@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Search, Play, Calendar, Users, Trophy, Mic, Radio, Star } from "lucide-react";
+import { Search, Play, Calendar, Users, Trophy, Mic, Radio, Star, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,8 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMeeting, setSelectedMeeting] = useState<number | undefined>();
   const [selectedDriver, setSelectedDriver] = useState<number | undefined>();
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   
   // Buscar dados reais da API OpenF1 para 2025
   const { data: featuredRadios = [], isLoading, error } = useOpenF1Radios({
@@ -49,8 +50,51 @@ const Index = () => {
 
   const handlePlayRadio = (radio: any) => {
     if (radio.recording_url) {
-      // Abrir URL do áudio em nova aba
-      window.open(radio.recording_url, '_blank');
+      // Se já está a tocar este rádio, pausar
+      if (currentlyPlaying === radio.id && audioElement) {
+        audioElement.pause();
+        setCurrentlyPlaying(null);
+        return;
+      }
+
+      // Se há outro áudio a tocar, pausar primeiro
+      if (audioElement) {
+        audioElement.pause();
+      }
+
+      // Criar novo elemento de áudio
+      const audio = new Audio(radio.recording_url);
+      audio.crossOrigin = "anonymous";
+      
+      // Event listeners
+      audio.onloadstart = () => {
+        console.log('Carregando áudio...');
+      };
+      
+      audio.oncanplay = () => {
+        console.log('Áudio pronto para tocar');
+        audio.play().catch(error => {
+          console.error('Erro ao reproduzir áudio:', error);
+          setCurrentlyPlaying(null);
+        });
+      };
+      
+      audio.onplay = () => {
+        setCurrentlyPlaying(radio.id);
+      };
+      
+      audio.onended = () => {
+        setCurrentlyPlaying(null);
+        setAudioElement(null);
+      };
+      
+      audio.onerror = (error) => {
+        console.error('Erro ao carregar áudio:', error);
+        setCurrentlyPlaying(null);
+        setAudioElement(null);
+      };
+
+      setAudioElement(audio);
     } else {
       console.log('URL de gravação não disponível para este rádio');
     }
@@ -194,6 +238,11 @@ const Index = () => {
                       <Badge variant="outline" className="border-red-500 text-red-400">
                         {radio.duration}
                       </Badge>
+                      {currentlyPlaying === radio.id && (
+                        <Badge className="bg-green-500 text-white">
+                          A tocar
+                        </Badge>
+                      )}
                     </div>
                     <CardTitle className="text-white text-lg mb-1">{radio.title}</CardTitle>
                     <CardDescription className="text-gray-300">
@@ -205,7 +254,11 @@ const Index = () => {
                     className="bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => handlePlayRadio(radio)}
                   >
-                    <Play className="h-4 w-4" />
+                    {currentlyPlaying === radio.id ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </CardHeader>
