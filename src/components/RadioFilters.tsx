@@ -25,6 +25,22 @@ const RadioFilters = ({
 
   const hasActiveFilters = selectedMeeting || selectedDriver;
 
+  const handleMeetingChange = (value: string) => {
+    if (value === "all") {
+      onMeetingChange(undefined);
+    } else {
+      onMeetingChange(parseInt(value));
+    }
+  };
+
+  const handleDriverChange = (value: string) => {
+    if (value === "all") {
+      onDriverChange(undefined);
+    } else {
+      onDriverChange(parseInt(value));
+    }
+  };
+
   return (
     <Card className="bg-white/10 border-white/20 backdrop-blur-sm mb-8">
       <CardContent className="p-6">
@@ -50,14 +66,14 @@ const RadioFilters = ({
               Grande Prémio
             </label>
             <Select 
-              value={selectedMeeting?.toString() || ""} 
-              onValueChange={(value) => onMeetingChange(value ? parseInt(value) : undefined)}
+              value={selectedMeeting?.toString() || "all"} 
+              onValueChange={handleMeetingChange}
             >
               <SelectTrigger className="bg-white/10 border-white/20 text-white">
                 <SelectValue placeholder={loadingMeetings ? "Carregando..." : "Todos os GPs"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os Grandes Prémios</SelectItem>
+                <SelectItem value="all">Todos os Grandes Prémios</SelectItem>
                 {meetings.map((meeting) => (
                   <SelectItem key={meeting.meeting_key} value={meeting.meeting_key.toString()}>
                     {meeting.meeting_name}
@@ -72,8 +88,8 @@ const RadioFilters = ({
               Piloto
             </label>
             <Select 
-              value={selectedDriver?.toString() || ""} 
-              onValueChange={(value) => onDriverChange(value ? parseInt(value) : undefined)}
+              value={selectedDriver?.toString() || "all"} 
+              onValueChange={handleDriverChange}
               disabled={!selectedMeeting}
             >
               <SelectTrigger className="bg-white/10 border-white/20 text-white">
@@ -84,7 +100,7 @@ const RadioFilters = ({
                 } />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os Pilotos</SelectItem>
+                <SelectItem value="all">Todos os Pilotos</SelectItem>
                 {drivers.map((driver) => (
                   <SelectItem key={driver.driver_number} value={driver.driver_number.toString()}>
                     {driver.full_name} ({driver.name_acronym})
